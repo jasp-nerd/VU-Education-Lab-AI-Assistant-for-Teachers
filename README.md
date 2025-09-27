@@ -1,135 +1,162 @@
-# VU Education Lab AI Assistant for Teachers
+# 🎓 VU Education Lab AI Assistant for Teachers
 
+<div align="center">
+
+[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/jasp-nerd/AI-Lesson-Helper)
 [![License](https://img.shields.io/github/license/jasp-nerd/AI-Lesson-Helper)](LICENSE)
+[![Powered by Gemini AI](https://img.shields.io/badge/Powered%20by-Gemini%20AI-orange.svg)](https://ai.google.dev/)
 
-A Chrome extension that leverages Google Gemini AI to help VU teachers extract educational value from web content. The assistant analyzes web pages through a secure backend server and provides summaries, quiz questions, simplified explanations, and teaching suggestions to support educational activities.
+**Transform any webpage into valuable educational content with AI-powered analysis**
 
-![VU Education Lab AI Assistant](https://i.imgur.com/9qX7e7c.png)
+*Developed by Vrije Universiteit Amsterdam Education Lab*
 
-## Features
+<img src="https://i.imgur.com/9qX7e7c.png" alt="VU Education Lab AI Assistant" width="600">
 
-- **Summarize**: Generate concise summaries of web pages for lesson planning with customizable length options (Short, Medium, Long)
-- **Quiz**: Create quiz questions based on current page content with different types (Multiple Choice, True/False, Short Answer, Mixed) and difficulty levels
-- **Explain**: Simplify difficult concepts from web content for different educational levels (Beginner, Intermediate, Advanced)
-- **Teaching**: Get teaching tips and activity ideas based on web content for various formats (Lecture, Discussion, Activity, Assessment, Essay)
-- **Custom Prompts**: Ask any question about the current page content with pre-built templates
-- **Multilingual Support**: Available in English and Dutch
-- **Content Export**: Copy results to clipboard for easy integration into lesson plans
-- **Intelligent Content Extraction**: Automatically identifies and processes headings, paragraphs, and lists from web pages
-- **Floating Popup**: Optional floating popup for quick access on any webpage
+[📥 Install Extension](#installation) • [🚀 Quick Start](#quick-start) • [📖 Documentation](#detailed-usage-guide)
 
-![Extension Interface](https://i.imgur.com/J72b6Zd.png)
+</div>
 
-## Installation
+## 🌟 Why Choose This Extension?
 
-### From the Chrome Web Store
-1. Visit the Chrome Web Store
-2. Search for "VU Education Lab AI Assistant for Teachers"
-3. Click "Add to Chrome"
-4. Follow the prompts to complete installation
+The VU Education Lab AI Assistant empowers educators to seamlessly convert web content into pedagogically sound teaching materials. Whether you're preparing lectures, creating assessments, or looking for new ways to engage students, this extension provides instant, AI-powered educational insights from any webpage.
 
-### Manual Installation (Developer Mode)
-1. Download and extract the extension files
-2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" using the toggle in the top-right corner
-4. Click "Load unpacked" button
-5. Select the extension folder and click "Open"
+**Perfect for:** Course preparation, lesson planning, quiz creation, content simplification, and discovering teaching opportunities in online resources.
 
-## Setup and Usage
+## ✨ Key Features
 
-### Getting Started
-1. Click the extension icon in your Chrome toolbar
-2. The extension connects automatically to our secure backend server
-3. No API key setup required - everything is handled securely on the server side
+<table>
+<tr>
+<td width="50%">
 
-### Using the Extension
-1. Navigate to any educational or informational webpage
-2. Click the extension icon to open the popup
-3. Choose from five main features:
-   - **Summarize**: Generate content summaries with length options
-   - **Quiz**: Create quiz questions with customizable types and difficulty
-   - **Explain**: Get simplified explanations for complex topics
-   - **Teaching**: Receive pedagogical suggestions and activity ideas
-   - **Custom**: Use your own prompts or select from templates
+### 📝 Content Analysis
+Transform web content into educational materials with AI-powered analysis that understands pedagogical needs.
 
-4. Configure your preferences (length, difficulty, format, etc.)
-5. Click "Generate" to process the content
-6. Review the AI-generated results
-7. Copy content to clipboard for use in your lesson plans
+### 📊 Smart Assessments  
+Generate quizzes, questions, and evaluation materials tailored to your teaching objectives and student levels.
 
-### Settings
-Access the settings page to:
-- Switch between English and Dutch interface
-- Toggle the floating popup feature
-- Check backend connection status
-- Access AI literacy resources
+### 🎯 Adaptive Learning
+Simplify complex topics and create explanations suitable for different educational backgrounds.
 
-## Features in Detail
+</td>
+<td width="50%">
 
-### Summarize
-- **Short**: 1-2 paragraph summaries
-- **Medium**: 3-4 paragraph summaries  
-- **Long**: 5+ paragraph detailed summaries
-- Formatted with markdown for easy classroom use
+### 🏫 Teaching Support
+Get practical suggestions for lectures, discussions, activities, and assignments based on any webpage.
 
-### Quiz Generation
-- **Multiple Choice**: Traditional A, B, C, D questions
-- **True/False**: Simple binary questions
-- **Short Answer**: Open-ended response questions
-- **Mixed**: Combination of all types
-- Adjustable difficulty levels and question counts
+### 🌐 Multilingual Ready
+Full support for English and Dutch interfaces with intelligent language detection.
 
-### Explain Topics
-- Automatically detects complex concepts on the page
-- Manual topic input for specific explanations
-- Three complexity levels: Beginner, Intermediate, Advanced
-- Includes practical applications and teaching tips
+### 🔒 Privacy First
+Secure backend processing with no personal data collection or API key requirements.
 
-### Teaching Suggestions
-- **Lecture**: Structured presentation ideas
-- **Discussion**: Conversation starters and debate topics
-- **Activity**: Interactive classroom exercises
-- **Assessment**: Evaluation strategies
-- **Essay**: Writing prompts and assignment ideas
+</td>
+</tr>
+</table>
 
-### Custom Prompts
-Pre-built templates include:
-- Main Arguments Analysis
-- Concept Mapping
-- Student Implications
-- Bias Analysis
-- Multi-modal Representations
-- Reflection Questions
+<div align="center">
 
-## Privacy & Security
+<img src="https://i.imgur.com/J72b6Zd.png" alt="Extension Interface" width="500">
 
-- **No Data Collection**: No personal data is stored or transmitted
-- **Secure Backend**: All AI processing happens on our secure servers
-- **Local Storage Only**: Extension preferences stored locally in your browser
-- **No API Keys Required**: No need to manage or expose personal API credentials
+*Clean, intuitive interface designed for educators*
 
-## Technical Details
+</div>
 
-### Browser Compatibility
-- Chrome 88+ (Manifest V3 compatible)
-- Internet connection required for AI processing
+## 📥 Installation
 
-### Backend Architecture
-- Secure Express.js backend server
-- Google Gemini AI integration
-- Deployed on Heroku for reliability
-- Rate limiting and error handling
+1. **Download**: Clone or download this repository
+2. **Chrome Extensions**: Navigate to `chrome://extensions/`
+3. **Developer Mode**: Enable the toggle in the top-right corner
+4. **Load Extension**: Click "Load unpacked" and select the extension folder
 
-## Support
+## 🚀 Quick Start
 
-For questions, issues, or feature requests:
-- Email: onderwijswerkplaats@vu.nl
-- Documentation: Extension settings page includes AI literacy resources
+<div align="center">
 
-## License
+**Ready in 30 seconds** ⏱️
 
-This project is licensed under the terms specified in the LICENSE file.
+</div>
 
-## Credits
+### Step 1: Install & Setup
+After installation, the extension automatically connects to our secure backend. No API keys or additional setup required!
 
-Developed by **Vrije Universiteit Amsterdam Education Lab** to enhance teaching with responsible AI assistance.
+### Step 2: Navigate & Analyze  
+Visit any educational webpage and click the extension icon in your toolbar.
+
+### Step 3: Choose Your Tool
+<div align="center">
+
+| Tool | Purpose | Best For |
+|------|---------|----------|
+| 📝 **Summarize** | Condense content | Quick overviews, key points |
+| ❓ **Quiz** | Generate questions | Assessments, student engagement |
+| 💡 **Explain** | Simplify concepts | Complex topics, different levels |
+| 🎓 **Teaching** | Get activity ideas | Lesson planning, classroom activities |
+| ⚡ **Custom** | Ask anything | Specific analysis needs |
+
+</div>
+
+### Step 4: Generate & Use
+Select your preferences, click "Generate", and copy the results directly to your lesson plans!
+
+---
+
+## 📖 Detailed Usage Guide
+
+### 🎯 Smart Content Processing
+The extension intelligently analyzes webpage content including headings, paragraphs, and lists to provide contextually relevant educational materials.
+
+### 🔧 Customization Options
+Each tool offers tailored settings:
+- **Length options** for summaries (Short, Medium, Long)
+- **Question types** for quizzes (Multiple Choice, True/False, Short Answer, Mixed)  
+- **Complexity levels** for explanations (Beginner, Intermediate, Advanced)
+- **Format preferences** for teaching suggestions (Lecture, Discussion, Activity, Assessment)
+
+### 📋 Pre-built Templates
+Access ready-to-use prompts for common educational tasks:
+- Main Arguments Analysis • Concept Mapping • Student Implications
+- Bias Analysis • Multi-modal Representations • Reflection Questions
+
+### ⚙️ Settings & Preferences
+- **Language Selection**: Switch between English and Dutch
+- **Floating Popup**: Optional quick-access overlay
+- **Backend Status**: Monitor connection health
+- **AI Literacy Resources**: Educational guides and best practices
+
+---
+
+## 📞 Support & Contact
+
+<div align="center">
+
+**Need Help?** We're here for you!
+
+📧 [onderwijswerkplaats@vu.nl](mailto:onderwijswerkplaats@vu.nl) • 📚 [AI Literacy Resources](settings.html) • 🐛 [Report Issues](https://github.com/jasp-nerd/AI-Lesson-Helper/issues)
+
+</div>
+
+---
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+---
+
+<div align="center">
+
+## 🏛️ About VU Education Lab
+
+**Developed with ❤️ by the Vrije Universiteit Amsterdam Education Lab**
+
+*Empowering educators with responsible AI tools for enhanced teaching and learning*
+
+[🌐 Visit VU Education Lab](https://vu.nl/onderwijswerkplaats) • [🎓 Learn More About VU](https://vu.nl)
+
+---
+
+**⭐ Star this project if it helps your teaching!**
+
+*Made with educators, for educators* 🎓
+
+</div>
