@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](https://github.com/jasp-nerd/AI-Lesson-Helper)
+[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/jasp-nerd/AI-Lesson-Helper)
 [![License](https://img.shields.io/github/license/jasp-nerd/AI-Lesson-Helper)](LICENSE)
 [![Powered by Gemini AI](https://img.shields.io/badge/Powered%20by-Gemini%20AI-orange.svg)](https://ai.google.dev/)
 
@@ -46,8 +46,8 @@ Get practical suggestions for lectures, discussions, activities, and assignments
 ### 🌐 Multilingual Ready
 Full support for English and Dutch interfaces with intelligent language detection.
 
-### 🔒 Privacy First
-Secure backend processing with no personal data collection or API key requirements.
+### 🔒 Privacy & Security
+VU-only authentication via Google OAuth, secure backend processing with minimal data access.
 
 </td>
 </tr>
@@ -68,6 +68,70 @@ Secure backend processing with no personal data collection or API key requiremen
 3. **Developer Mode**: Enable the toggle in the top-right corner
 4. **Load Extension**: Click "Load unpacked" and select the extension folder
 
+## 🔐 Google OAuth Setup (Required)
+
+This extension is **restricted to VU Amsterdam users only** (emails ending with `@vu.nl` or `@student.vu.nl`). To enable Google OAuth authentication, you need to configure the extension with your OAuth2 credentials.
+
+### Step 1: Create a Google Cloud Project
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the **Google+ API** or **People API** for your project
+
+### Step 2: Create OAuth2 Credentials
+
+1. Navigate to **APIs & Services** > **Credentials**
+2. Click **Create Credentials** > **OAuth client ID**
+3. Select **Chrome Extension** as the application type
+4. For **Item ID**, you'll need your Chrome Extension ID:
+   - Load the unpacked extension in Chrome
+   - Go to `chrome://extensions/`
+   - Find your extension and copy the **ID** (long string of letters)
+5. Add authorized JavaScript origins (if needed)
+6. Click **Create**
+7. Copy the **Client ID** (it will look like: `xxxxxxxxxxxx.apps.googleusercontent.com`)
+
+### Step 3: Configure the Extension
+
+1. Open `manifest.json` in the extension folder
+2. Find the `oauth2` section and replace `YOUR_CLIENT_ID` with your actual Client ID:
+   ```json
+   "oauth2": {
+     "client_id": "YOUR_ACTUAL_CLIENT_ID.apps.googleusercontent.com",
+     "scopes": [
+       "https://www.googleapis.com/auth/userinfo.email",
+       "https://www.googleapis.com/auth/userinfo.profile"
+     ]
+   }
+   ```
+3. Find the `key` field and replace `YOUR_EXTENSION_KEY_HERE` with your extension's public key:
+   - To get the public key, load the extension once
+   - Go to `chrome://extensions/`
+   - Click **Pack extension** and pack your extension folder
+   - The public key will be in the generated `.pem` file or shown in the console
+   - Alternatively, you can find the key in `%LOCALAPPDATA%\Google\Chrome\User Data\Default\Extensions\[YOUR_EXTENSION_ID]` (Windows) or similar paths on Mac/Linux
+
+### Step 4: Reload the Extension
+
+1. Go to `chrome://extensions/`
+2. Click the **Reload** button on your extension
+3. Open the extension - you should now see the **Sign in with Google** button
+4. Sign in with your VU email address
+
+### 🔒 Authentication Features
+
+- ✅ **Email Domain Validation**: Only `@vu.nl` and `@student.vu.nl` emails are allowed
+- ✅ **Automatic Token Management**: OAuth tokens are securely stored and managed
+- ✅ **Sign Out Capability**: Users can sign out at any time
+- ✅ **Session Persistence**: Authentication persists across browser sessions
+
+### ⚠️ Important Notes
+
+- **User Consent**: Users must grant permission to access their Google profile and email
+- **Privacy**: Only email and name are accessed - no other personal data
+- **VU Restriction**: Non-VU email addresses will be rejected automatically
+- **Token Security**: OAuth tokens are stored locally and can be revoked at any time
+
 ## 🚀 Quick Start
 
 <div align="center">
@@ -76,8 +140,8 @@ Secure backend processing with no personal data collection or API key requiremen
 
 </div>
 
-### Step 1: Install & Setup
-After installation, the extension automatically connects to our secure backend. No API keys or additional setup required!
+### Step 1: Install & Authenticate
+After installation, sign in with your VU email address. The extension automatically connects to our secure backend.
 
 ### Step 2: Navigate & Analyze  
 Visit any educational webpage and click the extension icon in your toolbar.

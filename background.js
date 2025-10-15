@@ -1,6 +1,31 @@
 // Background script for VU Education Lab AI Assistant
 // Handles communication between content script and popup
 
+// Check authentication status on extension install or update
+chrome.runtime.onInstalled.addListener(async (details) => {
+  console.log('Extension installed/updated:', details.reason);
+  
+  // Check if user is authenticated
+  const result = await chrome.storage.local.get(['vuAuthUser']);
+  if (!result.vuAuthUser) {
+    console.log('User not authenticated - will require login');
+  } else {
+    console.log('User authenticated:', result.vuAuthUser.email);
+  }
+});
+
+// Check authentication status on browser startup
+chrome.runtime.onStartup.addListener(async () => {
+  console.log('Browser started - checking authentication');
+  
+  const result = await chrome.storage.local.get(['vuAuthUser']);
+  if (!result.vuAuthUser) {
+    console.log('User not authenticated - will require login');
+  } else {
+    console.log('User authenticated:', result.vuAuthUser.email);
+  }
+});
+
 // Listen for messages from content script or popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.action) {
@@ -17,6 +42,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         function: getPageContent
       }).then(results => {
         sendResponse({ content: results[0].result });
+      });
+      return true; // Required for async sendResponse
+    case "checkAuth":
+      // Check authentication status
+      chrome.storage.local.get(['vuAuthUser'], (result) => {
+        sendResponse({ 
+          authenticated: !!result.vuAuthUser,
+          user: result.vuAuthUser || null
+        });
       });
       return true; // Required for async sendResponse
     default:

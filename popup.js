@@ -188,6 +188,75 @@ async function switchLanguage(lang) {
   localStorage.setItem('vu_educationlab_extension_language', lang);
 }
 
+// Authentication check and UI management
+async function checkAuthenticationAndShowUI() {
+  const authSection = document.getElementById('auth-section');
+  const userProfileSection = document.getElementById('user-profile-section');
+  const featuresSection = document.getElementById('features-section');
+  const noApiKeyOverlay = document.getElementById('no-api-key-overlay');
+
+  try {
+    const isAuth = await window.VUAuth.isAuthenticated();
+    
+    if (isAuth) {
+      // User is authenticated - show profile and features
+      const userProfile = await window.VUAuth.getUserProfile();
+      
+      if (userProfile) {
+        // Update user profile UI
+        document.getElementById('user-name').textContent = userProfile.name || 'VU User';
+        document.getElementById('user-email').textContent = userProfile.email;
+        
+        if (userProfile.picture) {
+          document.getElementById('user-avatar').src = userProfile.picture;
+        }
+        
+        // Show user profile, hide auth section
+        authSection.style.display = 'none';
+        userProfileSection.style.display = 'block';
+        
+        // Check backend connection
+        const isConnected = await window.GeminiAPI.validateConnection();
+        if (isConnected) {
+          if (noApiKeyOverlay) {
+            noApiKeyOverlay.style.display = 'none';
+            noApiKeyOverlay.style.pointerEvents = 'none';
+          }
+          if (featuresSection) featuresSection.classList.remove('hidden');
+        } else {
+          if (noApiKeyOverlay) {
+            const overlayTitle = noApiKeyOverlay.querySelector('h2');
+            const overlayText = noApiKeyOverlay.querySelector('p');
+            
+            if (overlayTitle) overlayTitle.textContent = 'Backend Connection Required';
+            if (overlayText) overlayText.innerHTML = 'Unable to connect to the backend server. Please ensure the server is running and properly configured.';
+            
+            noApiKeyOverlay.style.display = 'flex';
+            noApiKeyOverlay.style.pointerEvents = 'auto';
+          }
+          if (featuresSection) featuresSection.classList.add('hidden');
+        }
+      }
+    } else {
+      // User is not authenticated - show auth section
+      authSection.style.display = 'block';
+      userProfileSection.style.display = 'none';
+      featuresSection.classList.add('hidden');
+      
+      if (noApiKeyOverlay) {
+        noApiKeyOverlay.style.display = 'none';
+        noApiKeyOverlay.style.pointerEvents = 'none';
+      }
+    }
+  } catch (error) {
+    console.error('Error checking authentication:', error);
+    // On error, show auth section
+    authSection.style.display = 'block';
+    userProfileSection.style.display = 'none';
+    featuresSection.classList.add('hidden');
+  }
+}
+
 // On DOMContentLoaded, load default or saved language
 document.addEventListener('DOMContentLoaded', async () => {
   // Get DOM elements
@@ -285,44 +354,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     updateUILanguage();
   });
 
-  // Check backend connection and show/hide overlay accordingly
-  window.GeminiAPI.validateConnection().then(isConnected => {
-    if (!isConnected) {
-      if (noApiKeyOverlay) {
-        // Update the overlay text for backend connection
-        const overlayTitle = noApiKeyOverlay.querySelector('h2');
-        const overlayText = noApiKeyOverlay.querySelector('p');
-        
-        if (overlayTitle) overlayTitle.textContent = 'Backend Connection Required';
-        if (overlayText) overlayText.innerHTML = 'Unable to connect to the backend server. Please ensure the server is running and properly configured.';
-        
-        noApiKeyOverlay.style.display = 'flex';
-        noApiKeyOverlay.style.pointerEvents = 'auto';
-      }
-      if (featuresSection) featuresSection.classList.add('hidden');
-    } else {
-      if (noApiKeyOverlay) {
-        noApiKeyOverlay.style.display = 'none';
-        noApiKeyOverlay.style.pointerEvents = 'none';
-      }
-      if (featuresSection) featuresSection.classList.remove('hidden');
-    }
-  }).catch(error => {
-    console.error('Error checking backend connection:', error);
-    // Default to showing the overlay if we can't check connection
-    if (noApiKeyOverlay) {
-      const overlayTitle = noApiKeyOverlay.querySelector('h2');
-      const overlayText = noApiKeyOverlay.querySelector('p');
-      
-      if (overlayTitle) overlayTitle.textContent = 'Connection Error';
-      if (overlayText) overlayText.innerHTML = 'Unable to verify backend connection. Please check the console for details.';
-      
-      noApiKeyOverlay.style.display = 'flex';
-      noApiKeyOverlay.style.pointerEvents = 'auto';
-    }
-    if (featuresSection) featuresSection.classList.add('hidden');
-  });
-
   // Tab switching
   tabButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -391,6 +422,57 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Update tooltips based on current language
   updateTooltips();
+
+  // Setup authentication event listeners
+  const signInBtn = document.getElementById('sign-in-btn');
+  const signOutBtn = document.getElementById('sign-out-btn');
+  const authError = document.getElementById('auth-error');
+
+  if (signInBtn) {
+    signInBtn.addEventListener('click', async () => {
+      try {
+        signInBtn.disabled = true;
+        signInBtn.textContent = 'Signing in...';
+        authError.style.display = 'none';
+
+        await window.VUAuth.signIn();
+        
+        // Refresh UI after successful sign in
+        await checkAuthenticationAndShowUI();
+      } catch (error) {
+        console.error('Sign in error:', error);
+        authError.textContent = error.message || 'Sign in failed. Please try again.';
+        authError.style.display = 'block';
+        
+        signInBtn.disabled = false;
+        signInBtn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width: 18px; height: 18px; margin-right: 8px;">Sign in with Google';
+      }
+    });
+  }
+
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', async () => {
+      try {
+        signOutBtn.disabled = true;
+        signOutBtn.textContent = 'Signing out...';
+
+        await window.VUAuth.signOut();
+        
+        // Refresh UI after sign out
+        await checkAuthenticationAndShowUI();
+        
+        signOutBtn.disabled = false;
+        signOutBtn.textContent = 'Sign Out';
+      } catch (error) {
+        console.error('Sign out error:', error);
+        signOutBtn.disabled = false;
+        signOutBtn.textContent = 'Sign Out';
+      }
+    });
+  }
+
+  // Check authentication status on load
+  await checkAuthenticationAndShowUI();
 });
 
 // Handle keyboard navigation

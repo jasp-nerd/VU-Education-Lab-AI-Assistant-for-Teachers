@@ -21,6 +21,12 @@ async function generateContent(prompt, options = {}) {
       throw new Error('Invalid input: prompt is required and must be a string');
     }
 
+    // Get user authentication
+    const user = await window.VUAuth.getCurrentUser();
+    if (!user || !user.email || !user.token) {
+      throw new Error('User not authenticated. Please sign in.');
+    }
+
     // Prepare request body for backend
     const requestBody = {
       prompt: prompt,
@@ -30,11 +36,14 @@ async function generateContent(prompt, options = {}) {
 
     console.log("Making request to backend:", `${BACKEND_URL}/api/generate`);
 
-    // Make request to backend server
+    // Make request to backend server WITH AUTHENTICATION
     const response = await fetch(`${BACKEND_URL}/api/generate`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}`,
+          "X-User-Email": user.email,
+          "X-Extension-ID": chrome.runtime.id
         },
         body: JSON.stringify(requestBody)
     });
@@ -65,6 +74,12 @@ async function generateContent(prompt, options = {}) {
       // Provide user-friendly error messages based on status
       let userMessage;
       switch (response.status) {
+        case 401:
+          userMessage = "Authentication failed. Please sign in again.";
+          break;
+        case 403:
+          userMessage = "Access denied. Only VU emails are allowed.";
+          break;
         case 400:
           userMessage = `Invalid request: ${errorMessage}`;
           break;
@@ -114,12 +129,24 @@ async function validateConnection() {
   try {
     console.log("Validating backend connection...");
 
+    // Get user info for authentication
+    const user = await window.VUAuth.getCurrentUser();
+    
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    // Add auth if user is signed in
+    if (user?.token && user?.email) {
+      headers['Authorization'] = `Bearer ${user.token}`;
+      headers['X-User-Email'] = user.email;
+      headers['X-Extension-ID'] = chrome.runtime.id;
+    }
+
     // First check if backend is reachable
     const healthResponse = await fetch(`${BACKEND_URL}/api/health`, {
       method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
+      headers: headers
     });
 
     if (!healthResponse.ok) {
@@ -133,9 +160,7 @@ async function validateConnection() {
     // Then check if API key is configured on backend
     const validateResponse = await fetch(`${BACKEND_URL}/api/validate`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: headers
     });
 
     if (!validateResponse.ok) {

@@ -23,6 +23,32 @@
       </div>
     </header>
 
+    <!-- Authentication Section -->
+    <div id="auth-section" style="display:none;">
+      <div class="auth-container">
+        <div class="auth-icon">🔒</div>
+        <h2>VU Authentication Required</h2>
+        <p>This extension is only available for VU Amsterdam users. Please sign in with your VU email address (@vu.nl or @student.vu.nl).</p>
+        <button id="sign-in-btn" class="auth-btn">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="width: 18px; height: 18px; margin-right: 8px;">
+          Sign in with Google
+        </button>
+        <div id="auth-error" class="auth-error" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- User Profile Section (shown when authenticated) -->
+    <div id="user-profile-section" style="display:none;">
+      <div class="user-profile">
+        <img id="user-avatar" src="" alt="User Avatar" class="user-avatar">
+        <div class="user-info">
+          <div id="user-name" class="user-name"></div>
+          <div id="user-email" class="user-email"></div>
+        </div>
+        <button id="sign-out-btn" class="sign-out-btn" title="Sign Out">Sign Out</button>
+      </div>
+    </div>
+
     <div id="backend-status-section" style="display:none">
       <h2>Backend Status</h2>
       <p>Checking connection to the backend server...</p>
@@ -157,6 +183,7 @@
     </footer>
   </div>
 
+  <script src="auth.js"></script>
   <script src="api.js"></script>
   <script src="iframe-bridge.js"></script>
   <script src="popup.js"></script>
