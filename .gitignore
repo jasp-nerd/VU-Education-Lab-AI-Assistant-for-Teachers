@@ -1,6 +1,7 @@
 # Sensitive backup files - DO NOT COMMIT
 .sensitive-backup.json
 *.sensitive-backup.*
+RESTORE_SENSITIVE_VALUES.md
 
 # OS files
 .DS_Store
