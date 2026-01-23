@@ -457,315 +457,340 @@ async function getFloatingIconState() {
   });
 }
 
-// Create floating icon
+// Constants for floating icon
+const FLOATING_ICON_CONFIG = {
+  size: { normal: 48, minimized: 20 },
+  margin: 20,
+  minTop: 10,
+  minimizeDelay: 3000,
+  animationDuration: 300
+};
+
+// Create floating icon with improved structure
 async function createFloatingIcon() {
-  // Check if icon already exists
   if (vuFloatingIcon) {
     return vuFloatingIcon;
   }
 
-  // Create the floating icon
   const icon = document.createElement('button');
   icon.className = 'vu-ai-floating-icon';
   icon.setAttribute('aria-label', 'Open VU Education Lab Assistant');
   icon.setAttribute('title', 'Open VU Education Lab AI Assistant');
-  icon.style.transition = 'all 0.3s cubic-bezier(.4,2,.6,1)';
-  icon.style.position = 'fixed';
-  icon.style.zIndex = 10000;
+  icon.dataset.edge = 'right'; // Use data attribute for state
 
-  // Create the icon image
   const img = document.createElement('img');
   img.src = chrome.runtime.getURL('images/icon48.png');
   img.alt = 'VU Education Lab AI Assistant';
-  img.style.transition = 'opacity 0.2s, width 0.2s, height 0.2s';
-  img.draggable = false; // Prevent native image drag behavior
-  img.style.pointerEvents = 'none'; // Let clicks/drags pass through to the button
+  img.draggable = false;
   icon.appendChild(img);
 
-  // Add click event to show draggable window
-  icon.addEventListener('click', (e) => {
-    if (icon.classList.contains('minimized')) return; // Don't open if minimized
-    toggleDraggableWindow();
-  });
+  // Click handler - using event delegation pattern
+  icon.addEventListener('click', handleIconClick);
 
-  // Add the icon to the page
   document.body.appendChild(icon);
   vuFloatingIcon = icon;
 
-  // Restore position and minimized state from chrome.storage.local
-  let iconState = await getFloatingIconState();
+  // Restore saved state
+  const iconState = await getFloatingIconState();
   if (iconState) {
-    setFloatingIconPosition(icon, iconState.left, iconState.top, iconState.edge, iconState.minimized, true);
-    if (iconState.minimized) {
-      minimizeFloatingIcon(true);
-    }
+    applyIconState(icon, iconState);
+  } else {
+    // Default position
+    setIconPosition(icon, { edge: 'right', top: window.innerHeight - 68 });
   }
 
-  // Make draggable
-  makeFloatingIconDraggable(icon);
-
-  // Auto-minimize after inactivity
-  let minimizeTimeout;
-  function resetMinimizeTimer() {
-    clearTimeout(minimizeTimeout);
-    if (!icon.classList.contains('minimized')) {
-      minimizeTimeout = setTimeout(() => minimizeFloatingIcon(), 3000);
-    }
-  }
-  icon.addEventListener('mousemove', resetMinimizeTimer);
-  icon.addEventListener('mousedown', resetMinimizeTimer);
-  icon.addEventListener('mouseup', resetMinimizeTimer);
-  icon.addEventListener('mouseleave', resetMinimizeTimer);
-  icon.addEventListener('mouseenter', () => {
-    if (icon.classList.contains('minimized')) {
-      restoreFloatingIcon();
-    }
-    clearTimeout(minimizeTimeout);
-  });
-  icon.addEventListener('mouseleave', resetMinimizeTimer);
-  // Start timer on creation
-  resetMinimizeTimer();
+  // Initialize dragging and auto-minimize
+  initializeIconDragging(icon);
+  initializeAutoMinimize(icon);
 
   return icon;
 }
 
-function setFloatingIconPosition(icon, left, top, edge, minimized, skipSave) {
-  // Clamp to viewport
-  const minTop = 10;
-  const maxTop = window.innerHeight - 58;
-  top = Math.max(minTop, Math.min(maxTop, top || window.innerHeight - 68));
-  if (edge === 'left') {
-    icon.style.left = '20px';
-    icon.style.right = '';
-  } else {
-    icon.style.left = '';
-    icon.style.right = '20px';
-  }
-  icon.style.top = top + 'px';
-  icon.style.bottom = '';
-  if (typeof minimized === 'undefined') minimized = icon.classList.contains('minimized');
-  if (!skipSave) {
-    saveFloatingIconState({ left, top, edge, minimized });
+function handleIconClick() {
+  if (!vuFloatingIcon.classList.contains('minimized')) {
+    toggleDraggableWindow();
   }
 }
 
-function makeFloatingIconDraggable(icon) {
-  let isDragging = false;
-  let startX, startY, startLeft, startTop;
-  let edge = 'right';
+// Improved position setter using CSS custom properties
+function setIconPosition(icon, { edge, top, skipSave = false }) {
+  const clampedTop = clampValue(
+    top,
+    FLOATING_ICON_CONFIG.minTop,
+    window.innerHeight - FLOATING_ICON_CONFIG.size.normal - FLOATING_ICON_CONFIG.minTop
+  );
 
-  icon.onmousedown = function (e) {
+  icon.dataset.edge = edge;
+  icon.style.setProperty('--icon-top', `${clampedTop}px`);
+
+  // Apply edge positioning via class
+  icon.classList.toggle('edge-left', edge === 'left');
+  icon.classList.toggle('edge-right', edge === 'right');
+
+  if (!skipSave) {
+    const isMinimized = icon.classList.contains('minimized');
+    saveFloatingIconState({ edge, top: clampedTop, minimized: isMinimized });
+  }
+}
+
+function applyIconState(icon, state) {
+  setIconPosition(icon, {
+    edge: state.edge || 'right',
+    top: state.top || window.innerHeight - 68,
+    skipSave: true
+  });
+
+  if (state.minimized) {
+    icon.classList.add('minimized');
+  }
+}
+
+// Cleaner drag implementation using closure
+function initializeIconDragging(icon) {
+  let dragState = null;
+
+  const handleMouseDown = (e) => {
     if (icon.classList.contains('minimized')) return;
-    e.preventDefault(); // Prevent native image drag behavior
-    isDragging = true;
-    startX = e.clientX;
-    startY = e.clientY;
-    startLeft = icon.offsetLeft;
-    startTop = icon.offsetTop;
+
+    e.preventDefault();
+    dragState = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startTop: parseInt(icon.style.getPropertyValue('--icon-top')) || 0,
+      startLeft: icon.getBoundingClientRect().left
+    };
+
     document.body.style.userSelect = 'none';
-    document.onmousemove = drag;
-    document.onmouseup = stopDrag;
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
-  function drag(e) {
-    if (!isDragging) return;
-    let dx = e.clientX - startX;
-    let dy = e.clientY - startY;
-    let newLeft = startLeft + dx;
-    let newTop = startTop + dy;
-    // Clamp to viewport
-    newTop = Math.max(10, Math.min(window.innerHeight - 58, newTop));
-    newLeft = Math.max(0, Math.min(window.innerWidth - 48, newLeft));
-    icon.style.left = newLeft + 'px';
-    icon.style.top = newTop + 'px';
-    icon.style.right = '';
-    icon.style.bottom = '';
-  }
+  const handleMouseMove = (e) => {
+    if (!dragState) return;
 
-  function stopDrag(e) {
-    if (!isDragging) return;
-    isDragging = false;
+    const deltaY = e.clientY - dragState.startY;
+    const newTop = clampValue(
+      dragState.startTop + deltaY,
+      FLOATING_ICON_CONFIG.minTop,
+      window.innerHeight - FLOATING_ICON_CONFIG.size.normal - FLOATING_ICON_CONFIG.minTop
+    );
+
+    icon.style.setProperty('--icon-top', `${newTop}px`);
+  };
+
+  const handleMouseUp = () => {
+    if (!dragState) return;
+
     document.body.style.userSelect = '';
-    document.onmousemove = null;
-    document.onmouseup = null;
-    // Snap to nearest edge
-    let left = icon.offsetLeft;
-    let edgeToSnap = (left < window.innerWidth / 2) ? 'left' : 'right';
-    if (edgeToSnap === 'left') {
-      icon.style.left = '20px';
-      icon.style.right = '';
-      edge = 'left';
-    } else {
-      icon.style.left = '';
-      icon.style.right = '20px';
-      edge = 'right';
-    }
-    let top = icon.offsetTop;
-    setFloatingIconPosition(icon, left, top, edge);
-  }
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+
+    // Determine edge based on final position
+    const iconRect = icon.getBoundingClientRect();
+    const edge = iconRect.left < window.innerWidth / 2 ? 'left' : 'right';
+    const top = parseInt(icon.style.getPropertyValue('--icon-top')) || 0;
+
+    setIconPosition(icon, { edge, top });
+    dragState = null;
+  };
+
+  icon.addEventListener('mousedown', handleMouseDown);
 }
 
-function minimizeFloatingIcon(instant) {
+// Improved auto-minimize with proper cleanup
+function initializeAutoMinimize(icon) {
+  let timeoutId = null;
+
+  const scheduleMinimize = () => {
+    clearTimeout(timeoutId);
+    if (!icon.classList.contains('minimized')) {
+      timeoutId = setTimeout(() => {
+        minimizeFloatingIcon();
+      }, FLOATING_ICON_CONFIG.minimizeDelay);
+    }
+  };
+
+  const cancelMinimize = () => {
+    clearTimeout(timeoutId);
+    if (icon.classList.contains('minimized')) {
+      restoreFloatingIcon();
+    }
+  };
+
+  icon.addEventListener('mouseenter', cancelMinimize);
+  icon.addEventListener('mouseleave', scheduleMinimize);
+  icon.addEventListener('mousedown', scheduleMinimize);
+  icon.addEventListener('mouseup', scheduleMinimize);
+
+  // Start initial timer
+  scheduleMinimize();
+}
+
+function minimizeFloatingIcon() {
   if (!vuFloatingIcon) return;
+
   vuFloatingIcon.classList.add('minimized');
-  vuFloatingIcon.style.width = '20px';
-  vuFloatingIcon.style.height = '20px';
-  vuFloatingIcon.style.borderRadius = '50%';
-  vuFloatingIcon.style.overflow = 'hidden';
-  vuFloatingIcon.style.opacity = '0.5';
-  vuFloatingIcon.style.background = 'var(--vu-blue)';
-  if (vuFloatingIcon.firstChild && vuFloatingIcon.firstChild.tagName === 'IMG') {
-    vuFloatingIcon.firstChild.style.opacity = '0';
-    vuFloatingIcon.firstChild.style.width = '0';
-    vuFloatingIcon.firstChild.style.height = '0';
-  }
-  // Save state
-  let left = vuFloatingIcon.offsetLeft;
-  let top = vuFloatingIcon.offsetTop;
-  let edge = (left < window.innerWidth / 2) ? 'left' : 'right';
-  setFloatingIconPosition(vuFloatingIcon, left, top, edge, true);
+
+  // Save minimized state
+  const edge = vuFloatingIcon.dataset.edge || 'right';
+  const top = parseInt(vuFloatingIcon.style.getPropertyValue('--icon-top')) || 0;
+  saveFloatingIconState({ edge, top, minimized: true });
 }
 
 function restoreFloatingIcon() {
   if (!vuFloatingIcon) return;
+
   vuFloatingIcon.classList.remove('minimized');
-  vuFloatingIcon.style.width = '48px';
-  vuFloatingIcon.style.height = '48px';
-  vuFloatingIcon.style.borderRadius = '50%';
-  vuFloatingIcon.style.opacity = '1';
-  vuFloatingIcon.style.background = 'var(--vu-blue)';
-  if (vuFloatingIcon.firstChild && vuFloatingIcon.firstChild.tagName === 'IMG') {
-    vuFloatingIcon.firstChild.style.opacity = '1';
-    vuFloatingIcon.firstChild.style.width = '28px';
-    vuFloatingIcon.firstChild.style.height = '28px';
-  }
-  // Save state
-  let left = vuFloatingIcon.offsetLeft;
-  let top = vuFloatingIcon.offsetTop;
-  let edge = (left < window.innerWidth / 2) ? 'left' : 'right';
-  setFloatingIconPosition(vuFloatingIcon, left, top, edge, false);
+
+  // Save restored state
+  const edge = vuFloatingIcon.dataset.edge || 'right';
+  const top = parseInt(vuFloatingIcon.style.getPropertyValue('--icon-top')) || 0;
+  saveFloatingIconState({ edge, top, minimized: false });
 }
 
-// Create draggable window
+// Utility function for clamping values
+function clampValue(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+// Constants for draggable window
+const WINDOW_CONFIG = {
+  defaultWidth: 520,
+  defaultHeight: 600,
+  minMargin: 10,
+  maxWidthPercent: 90,
+  maxHeightPercent: 80
+};
+
+// Create draggable window with improved structure
 function createDraggableWindow() {
-  // Check if window already exists
   if (vuDraggableWindow) {
     return vuDraggableWindow;
   }
-  
-  // Create the window container
-  const window = document.createElement('div');
-  window.className = 'vu-ai-draggable-window hidden';
-  
-  // Create window header
+
+  const windowEl = document.createElement('div');
+  windowEl.className = 'vu-ai-draggable-window hidden';
+
+  // Build header with title and controls
+  const header = buildWindowHeader();
+  const content = buildWindowContent();
+
+  windowEl.appendChild(header);
+  windowEl.appendChild(content);
+  document.body.appendChild(windowEl);
+
+  vuDraggableWindow = windowEl;
+
+  // Initialize dragging on header
+  initializeWindowDragging(windowEl, header);
+
+  return windowEl;
+}
+
+function buildWindowHeader() {
   const header = document.createElement('div');
   header.className = 'vu-ai-window-header';
-  
-  // Add title
+
   const title = document.createElement('h1');
   title.className = 'vu-ai-window-title';
   title.textContent = 'VU Education Lab AI Assistant';
-  
-  // Add window actions
+
   const actions = document.createElement('div');
   actions.className = 'vu-ai-window-actions';
-  
-  // Add minimize button
-  const minimizeBtn = document.createElement('button');
-  minimizeBtn.className = 'vu-ai-window-button';
-  minimizeBtn.innerHTML = '&minus;';
-  minimizeBtn.setAttribute('aria-label', 'Minimize');
-  minimizeBtn.setAttribute('title', 'Minimize');
-  
-  // Add close button
-  const closeBtn = document.createElement('button');
-  closeBtn.className = 'vu-ai-window-button';
-  closeBtn.innerHTML = '&times;';
-  closeBtn.setAttribute('aria-label', 'Close');
-  closeBtn.setAttribute('title', 'Close');
-  
-  // Add buttons to actions
-  actions.appendChild(minimizeBtn);
-  actions.appendChild(closeBtn);
-  
-  // Add title and actions to header
-  header.appendChild(title);
-  header.appendChild(actions);
-  
-  // Create window content
+
+  // Create control buttons
+  const minimizeBtn = createWindowButton('&minus;', 'Minimize', hideDraggableWindow);
+  const closeBtn = createWindowButton('&times;', 'Close', hideDraggableWindow);
+
+  actions.append(minimizeBtn, closeBtn);
+  header.append(title, actions);
+
+  return header;
+}
+
+function createWindowButton(innerHTML, label, onClick) {
+  const button = document.createElement('button');
+  button.className = 'vu-ai-window-button';
+  button.innerHTML = innerHTML;
+  button.setAttribute('aria-label', label);
+  button.setAttribute('title', label);
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+function buildWindowContent() {
   const content = document.createElement('div');
   content.className = 'vu-ai-window-content';
-  
-  // Create iframe for extension popup
+
   const iframe = document.createElement('iframe');
   iframe.className = 'vu-ai-window-iframe';
   iframe.src = chrome.runtime.getURL('popup.html');
   iframe.setAttribute('allow', 'clipboard-read; clipboard-write');
-  
-  // Add iframe to content
+
   content.appendChild(iframe);
-  
-  // Add header and content to window
-  window.appendChild(header);
-  window.appendChild(content);
-  
-  // Add window to the page
-  document.body.appendChild(window);
-  
-  // Store reference
-  vuDraggableWindow = window;
-  
-  // Add event listeners for drag functionality
-  makeDraggable(window, header);
-  
-  // Add event listeners for buttons
-  minimizeBtn.addEventListener('click', () => {
-    hideDraggableWindow();
-  });
-  
-  closeBtn.addEventListener('click', () => {
-    hideDraggableWindow();
-  });
-  
-  return window;
+  return content;
 }
 
-// Make an element draggable
-function makeDraggable(element, handle) {
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-  
-  handle.onmousedown = dragMouseDown;
-  
-  function dragMouseDown(e) {
+// Improved draggable implementation with proper constraints
+function initializeWindowDragging(windowEl, handle) {
+  let dragState = null;
+
+  const handleMouseDown = (e) => {
     e.preventDefault();
-    // Get the initial mouse cursor position
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onmouseup = closeDragElement;
-    // Call a function whenever the cursor moves
-    document.onmousemove = elementDrag;
-  }
-  
-  function elementDrag(e) {
-    e.preventDefault();
-    // Calculate the new cursor position
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    // Set the element's new position
-    element.style.top = (element.offsetTop - pos2) + "px";
-    element.style.left = (element.offsetLeft - pos1) + "px";
-    // Remove bottom positioning if dragged
-    element.style.bottom = 'auto';
-    element.style.right = 'auto';
-  }
-  
-  function closeDragElement() {
-    // Stop moving when mouse button is released
-    document.onmouseup = null;
-    document.onmousemove = null;
-  }
+
+    const rect = windowEl.getBoundingClientRect();
+    dragState = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startLeft: rect.left,
+      startTop: rect.top
+    };
+
+    // Add dragging class for potential visual feedback
+    windowEl.classList.add('dragging');
+    document.body.style.userSelect = 'none';
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!dragState) return;
+
+    const deltaX = e.clientX - dragState.startX;
+    const deltaY = e.clientY - dragState.startY;
+
+    let newLeft = dragState.startLeft + deltaX;
+    let newTop = dragState.startTop + deltaY;
+
+    // Constrain to viewport with margins
+    const rect = windowEl.getBoundingClientRect();
+    const maxLeft = window.innerWidth - rect.width - WINDOW_CONFIG.minMargin;
+    const maxTop = window.innerHeight - rect.height - WINDOW_CONFIG.minMargin;
+
+    newLeft = clampValue(newLeft, WINDOW_CONFIG.minMargin, maxLeft);
+    newTop = clampValue(newTop, WINDOW_CONFIG.minMargin, maxTop);
+
+    windowEl.style.left = `${newLeft}px`;
+    windowEl.style.top = `${newTop}px`;
+    windowEl.style.right = 'auto';
+    windowEl.style.bottom = 'auto';
+    windowEl.style.transform = 'none';
+  };
+
+  const handleMouseUp = () => {
+    if (!dragState) return;
+
+    windowEl.classList.remove('dragging');
+    document.body.style.userSelect = '';
+
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+
+    dragState = null;
+  };
+
+  handle.addEventListener('mousedown', handleMouseDown);
 }
 
 // Toggle the draggable window

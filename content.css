@@ -106,13 +106,17 @@
   opacity: 1;
 }
 
-/* Floating Icon styles */
+/* Floating Icon styles - improved with CSS variables and classes */
 .vu-ai-floating-icon {
+  --icon-size: 48px;
+  --icon-size-minimized: 20px;
+  --icon-margin: 20px;
+  --icon-top: 20px;
+
   position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 48px;
-  height: 48px;
+  top: var(--icon-top);
+  width: var(--icon-size);
+  height: var(--icon-size);
   background-color: var(--vu-blue);
   border-radius: 50%;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
@@ -121,53 +125,70 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s cubic-bezier(.4,2,.6,1);
+  transition: transform 0.3s cubic-bezier(0.4, 2, 0.6, 1),
+              background-color 0.2s ease,
+              box-shadow 0.3s ease,
+              width 0.3s ease,
+              height 0.3s ease,
+              opacity 0.3s ease;
   border: none;
   outline: none;
   opacity: 1;
   pointer-events: auto;
   overflow: visible;
+  will-change: transform;
 }
 
-.vu-ai-floating-icon:hover {
+/* Edge positioning using classes instead of inline styles */
+.vu-ai-floating-icon.edge-left {
+  left: var(--icon-margin);
+  right: auto;
+}
+
+.vu-ai-floating-icon.edge-right {
+  left: auto;
+  right: var(--icon-margin);
+}
+
+.vu-ai-floating-icon:hover:not(.minimized) {
   transform: scale(1.1);
   background-color: var(--vu-dark-blue);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
-.vu-ai-floating-icon:active {
+.vu-ai-floating-icon:active:not(.minimized) {
   transform: scale(0.95);
 }
 
+/* Minimized state - cleaner without !important */
 .vu-ai-floating-icon.minimized {
-  width: 20px !important;
-  height: 20px !important;
-  min-width: 20px !important;
-  min-height: 20px !important;
-  max-width: 20px !important;
-  max-height: 20px !important;
-  opacity: 0.5 !important;
-  background: var(--vu-blue) !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.10);
-  overflow: hidden !important;
-  pointer-events: auto;
+  width: var(--icon-size-minimized);
+  height: var(--icon-size-minimized);
+  opacity: 0.5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.vu-ai-floating-icon.minimized:hover {
+  opacity: 0.7;
+  transform: scale(1.05);
 }
 
 .vu-ai-floating-icon.minimized img {
-  opacity: 0 !important;
-  width: 0 !important;
-  height: 0 !important;
-  transition: opacity 0.2s, width 0.2s, height 0.2s;
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
 
 .vu-ai-floating-icon img {
   width: 28px;
   height: 28px;
   object-fit: contain;
-  transition: opacity 0.2s, width 0.2s, height 0.2s;
+  transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease;
+  pointer-events: none;
 }
 
-/* Draggable Window styles */
+/* Draggable Window styles - improved */
 .vu-ai-draggable-window {
   position: fixed;
   bottom: 90px;
@@ -181,11 +202,22 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: opacity 0.3s ease, transform 0.3s ease;
+  transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
   font-family: Arial, sans-serif;
   border: 1px solid rgba(0, 0, 0, 0.1);
   max-width: 90vw;
   max-height: 80vh;
+  will-change: transform;
+}
+
+/* Visual feedback while dragging */
+.vu-ai-draggable-window.dragging {
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  cursor: grabbing;
+}
+
+.vu-ai-draggable-window.dragging .vu-ai-window-header {
+  cursor: grabbing;
 }
 
 .vu-ai-window-header {
@@ -194,10 +226,15 @@
   padding: 14px 18px;
   background-color: var(--vu-blue);
   color: var(--vu-white);
-  cursor: move;
+  cursor: grab;
   user-select: none;
   border-radius: 12px 12px 0 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background-color 0.2s ease;
+}
+
+.vu-ai-window-header:active {
+  cursor: grabbing;
 }
 
 .vu-ai-window-title {

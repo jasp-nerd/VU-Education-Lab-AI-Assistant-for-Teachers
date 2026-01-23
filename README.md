@@ -3,7 +3,7 @@
 <div align="center">
 
 [![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](https://github.com/VU-Amsterdam/AI-Assistant)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](../LICENSE)
+[![License](https://img.shields.io/badge/license-GPL--3.0-green.svg)](LICENSE)
 [![AI Provider](https://img.shields.io/badge/AI-Azure%20OpenAI-orange.svg)](https://azure.microsoft.com/en-us/products/ai-services/openai-service/)
 
 **Transform any webpage or PDF into valuable educational content with AI-powered analysis**
@@ -223,7 +223,7 @@ chrome-extension/
 
 ## 📄 License
 
-MIT License - Copyright © 2025 VU Amsterdam Education Lab
+GPL-3.0 License - Copyright © 2025 VU Amsterdam Education Lab
 
 ---
 

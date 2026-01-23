@@ -498,6 +498,10 @@ button:active {
   content: "📋";
 }
 
+#export-pdf::before {
+  content: "📄";
+}
+
 #download-result::before {
   content: "💾";
 }

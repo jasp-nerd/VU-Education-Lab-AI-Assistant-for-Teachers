@@ -2,8 +2,7 @@
 // Handles communication between content script and popup
 
 // OAuth Client ID for Web Application
-// IMPORTANT: Replace with your actual OAuth Client ID from Google Cloud Console
-const OAUTH_CLIENT_ID = 'YOUR_OAUTH_CLIENT_ID_HERE';
+const OAUTH_CLIENT_ID = '696134929035-krfrjhqglcs08tve92p2jmvqcg4omjq3.apps.googleusercontent.com';
 
 // Allowed email domains for VU users
 const ALLOWED_DOMAINS = ['vu.nl', 'student.vu.nl'];

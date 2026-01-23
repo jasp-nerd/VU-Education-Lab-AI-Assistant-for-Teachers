@@ -40,6 +40,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     });
+    
+    // Update the Education Lab link URL based on language
+    const educationLabLink = document.getElementById('ai-literacy-link');
+    if (educationLabLink) {
+      const url = getSettingsTranslation('aiLiteracyUrl');
+      if (url) {
+        educationLabLink.href = url;
+      }
+    }
   }
   // --- END TRANSLATION SUPPORT ---
 

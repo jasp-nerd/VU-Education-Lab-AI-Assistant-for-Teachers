@@ -1,7 +1,6 @@
 // Authentication module for VU Education Lab AI Assistant
 // Handles Google OAuth authentication and validates VU email domains
-// Note: OAuth flow now handled by background script (background.js)
-// The Client ID should be configured in background.js instead
+// Note: OAuth flow is initiated by this module but executed by background script (background.js)
 
 // Allowed email domains for VU users
 const ALLOWED_DOMAINS = ['vu.nl', 'student.vu.nl'];
@@ -213,20 +212,6 @@ async function getUserProfile() {
 }
 
 /**
- * Get the current OAuth token
- * @returns {Promise<string|null>} - OAuth token or null
- */
-async function getUserToken() {
-  try {
-    const user = await getCurrentUser();
-    return user?.token || null;
-  } catch (error) {
-    console.error('Error getting user token:', error);
-    return null;
-  }
-}
-
-/**
  * Refresh the OAuth token silently (without user interaction)
  * @returns {Promise<string|null>} - New token or null if refresh failed
  */
@@ -343,7 +328,6 @@ window.VUAuth = {
   getCurrentUser,
   getUserProfile,
   isValidVUEmail,
-  getUserToken,
   refreshToken,
   getValidToken
 };

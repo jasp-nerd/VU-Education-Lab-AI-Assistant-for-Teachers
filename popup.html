@@ -37,18 +37,6 @@
       </div>
     </div>
 
-    <div id="backend-status-section" style="display:none">
-      <h2>Backend Status</h2>
-      <p>Checking connection to the backend server...</p>
-      <div id="backend-status" role="status"></div>
-    </div>
-
-    <div id="no-api-key-overlay" style="display:none;align-items:center;justify-content:center;flex-direction:column;position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(255,255,255,0.96);z-index:9999;text-align:center;">
-      <h2 style="color:var(--vu-blue);margin-bottom:12px;">Backend Connection Required</h2>
-      <p style="margin-bottom:18px;">Unable to connect to the backend server. Please ensure the server is running and properly configured.</p>
-      <button id="goto-settings-btn" style="background:var(--vu-blue);color:#fff;padding:10px 24px;border:none;border-radius:5px;cursor:pointer;font-size:15px;">Check Connection</button>
-    </div>
-
     <div id="features-section" class="hidden">
       <div class="tabs" role="tablist">
         <button class="tab-btn active" data-tab="summarize" role="tab" aria-selected="true" aria-controls="summarize">Summarize</button>
@@ -162,6 +150,7 @@
         <div id="result-content" aria-live="polite"></div>
         <div class="result-actions hidden">
           <button id="copy-result" data-tooltip="Copy content to clipboard">Copy to Clipboard</button>
+          <button id="export-pdf" data-tooltip="Export content as PDF">Export PDF</button>
         </div>
       </div>
     </div>
@@ -171,6 +160,7 @@
     </footer>
   </div>
 
+  <script src="jspdf.umd.min.js"></script>
   <script src="auth.js"></script>
   <script src="api.js"></script>
   <script src="iframe-bridge.js"></script>

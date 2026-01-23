@@ -143,6 +143,7 @@ function updateUILanguage() {
 
   // Result actions
   if (copyResultBtn) copyResultBtn.textContent = getTranslation('copy');
+  if (exportPdfBtn) exportPdfBtn.textContent = getTranslation('exportPdf');
 
   // Footer
   const footerP = document.querySelector('footer p');
@@ -193,55 +194,36 @@ async function checkAuthenticationAndShowUI() {
   console.log('🔄 checkAuthenticationAndShowUI called');
   const authSection = document.getElementById('auth-section');
   const featuresSection = document.getElementById('features-section');
-  const noApiKeyOverlay = document.getElementById('no-api-key-overlay');
 
   try {
+    // First check if user has stored auth data
     const isAuth = await window.VUAuth.isAuthenticated();
     console.log('🔐 Authentication status:', isAuth);
     
     if (isAuth) {
-      // User is authenticated - hide auth section and show features
-      console.log('✅ User authenticated - showing features');
-      authSection.style.display = 'none';
+      // User has stored auth - try to get a valid token (will refresh if needed)
+      console.log('✅ User has stored auth - validating token...');
+      const token = await window.VUAuth.getValidToken();
       
-      // Check backend connection
-      const isConnected = await window.GeminiAPI.validateConnection();
-      console.log('🔌 Backend connection:', isConnected);
-      
-      if (isConnected) {
-        console.log('✅ Backend connected - showing features section');
-        if (noApiKeyOverlay) {
-          noApiKeyOverlay.style.display = 'none';
-          noApiKeyOverlay.style.pointerEvents = 'none';
-        }
+      if (token) {
+        // Token is valid - show features
+        console.log('✅ Token valid - showing features');
+        authSection.style.display = 'none';
         if (featuresSection) {
           featuresSection.classList.remove('hidden');
-          featuresSection.style.display = 'block'; // Explicitly set display
+          featuresSection.style.display = 'block';
         }
       } else {
-        console.log('❌ Backend not connected - showing overlay');
-        if (noApiKeyOverlay) {
-          const overlayTitle = noApiKeyOverlay.querySelector('h2');
-          const overlayText = noApiKeyOverlay.querySelector('p');
-          
-          if (overlayTitle) overlayTitle.textContent = 'Backend Connection Required';
-          if (overlayText) overlayText.innerHTML = 'Unable to connect to the backend server. Please ensure the server is running and properly configured.';
-          
-          noApiKeyOverlay.style.display = 'flex';
-          noApiKeyOverlay.style.pointerEvents = 'auto';
-        }
-        if (featuresSection) featuresSection.classList.add('hidden');
+        // Token refresh failed - user needs to sign in again
+        console.log('❌ Token expired/invalid - showing auth section');
+        authSection.style.display = 'block';
+        featuresSection.classList.add('hidden');
       }
     } else {
       // User is not authenticated - show auth section
       console.log('❌ User not authenticated - showing auth section');
       authSection.style.display = 'block';
       featuresSection.classList.add('hidden');
-      
-      if (noApiKeyOverlay) {
-        noApiKeyOverlay.style.display = 'none';
-        noApiKeyOverlay.style.pointerEvents = 'none';
-      }
     }
   } catch (error) {
     console.error('❌ Error checking authentication:', error);
@@ -254,12 +236,8 @@ async function checkAuthenticationAndShowUI() {
 // On DOMContentLoaded, load default or saved language
 document.addEventListener('DOMContentLoaded', async () => {
   // Get DOM elements
-  apiKeyInput = document.getElementById('api-key');
-  saveApiKeyBtn = document.getElementById('save-api-key');
-  apiStatus = document.getElementById('api-status');
   featuresSection = document.getElementById('features-section');
-  apiKeySection = document.getElementById('api-key-section');
-  
+
   tabButtons = document.querySelectorAll('.tab-btn');
   tabPanes = document.querySelectorAll('.tab-pane');
   
@@ -269,6 +247,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   resultActions = document.querySelector('.result-actions');
   
   copyResultBtn = document.getElementById('copy-result');
+  exportPdfBtn = document.getElementById('export-pdf');
   
   generateSummaryBtn = document.getElementById('generate-summary');
   generateQuizBtn = document.getElementById('generate-quiz');
@@ -277,16 +256,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   languageToggleBtn = document.getElementById('language-toggle-btn');
   settingsBtn = document.getElementById('settings-btn');
-  
-  noApiKeyOverlay = document.getElementById('no-api-key-overlay');
-  gotoSettingsBtn = document.getElementById('goto-settings-btn');
-  
+
   generateCustomBtn = document.getElementById('generate-custom');
   customPromptInput = document.getElementById('custom-prompt');
   templateButtons = document.querySelectorAll('.template-btn');
-  
-  // Hide API key section (now only in settings)
-  if (apiKeySection) apiKeySection.style.display = 'none';
 
   // Settings button navigation
   if (settingsBtn) {
@@ -295,47 +268,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
   
-  // Check connection from overlay
-  if (gotoSettingsBtn) {
-    gotoSettingsBtn.addEventListener('click', async () => {
-      // Show loading state
-      gotoSettingsBtn.textContent = 'Checking...';
-      gotoSettingsBtn.disabled = true;
-      
-      try {
-        const isConnected = await window.GeminiAPI.validateConnection();
-        if (isConnected) {
-          // Hide overlay and show features
-          if (noApiKeyOverlay) {
-            noApiKeyOverlay.style.display = 'none';
-            noApiKeyOverlay.style.pointerEvents = 'none';
-          }
-          if (featuresSection) featuresSection.classList.remove('hidden');
-          
-          gotoSettingsBtn.textContent = '✓ Connected!';
-          setTimeout(() => {
-            gotoSettingsBtn.textContent = 'Check Connection';
-            gotoSettingsBtn.disabled = false;
-          }, 2000);
-        } else {
-          // Show error state
-          gotoSettingsBtn.textContent = '❌ Failed';
-          setTimeout(() => {
-            gotoSettingsBtn.textContent = 'Check Connection';
-            gotoSettingsBtn.disabled = false;
-          }, 2000);
-        }
-      } catch (error) {
-        console.error('Connection check failed:', error);
-        gotoSettingsBtn.textContent = '❌ Error';
-        setTimeout(() => {
-          gotoSettingsBtn.textContent = 'Check Connection';
-          gotoSettingsBtn.disabled = false;
-        }, 2000);
-      }
-    });
-  }
-
   // Language: load saved or default
   chrome.storage.local.get(['language'], async (result) => {
     let savedLang = result.language;
@@ -381,6 +313,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   copyResultBtn.addEventListener('click', () => {
     addButtonClickEffect(copyResultBtn);
     copyResult();
+  });
+  
+  exportPdfBtn.addEventListener('click', () => {
+    addButtonClickEffect(exportPdfBtn);
+    exportToPDF();
   });
   
   // Keyboard navigation
@@ -1058,6 +995,191 @@ function processHTMLForCopy(element) {
   return result;
 }
 
+// Export result to PDF
+function exportToPDF() {
+  try {
+    // Get the jsPDF constructor from the global jspdf object
+    const { jsPDF } = window.jspdf;
+    
+    // Create a new PDF document
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // PDF settings
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
+    const maxWidth = pageWidth - (margin * 2);
+    let yPosition = margin;
+    const lineHeight = 7;
+    const paragraphSpacing = 4;
+    
+    // Get the content
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = resultContent.innerHTML;
+    
+    // Add title/header
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(0, 119, 179); // VU Blue
+    doc.text('VU Education Lab AI Assistant', margin, yPosition);
+    yPosition += lineHeight + 5;
+    
+    // Add a line separator
+    doc.setDrawColor(0, 119, 179);
+    doc.setLineWidth(0.5);
+    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 10;
+    
+    // Add timestamp
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    const timestamp = new Date().toLocaleString();
+    doc.text(`Generated: ${timestamp}`, margin, yPosition);
+    yPosition += lineHeight + 5;
+    
+    // Reset text color for content
+    doc.setTextColor(51, 51, 51);
+    
+    // Process the HTML content
+    processElementForPDF(tempDiv, doc, margin, maxWidth, yPosition, lineHeight, paragraphSpacing, pageHeight);
+    
+    // Generate filename with timestamp
+    const dateStr = new Date().toISOString().slice(0, 10);
+    const filename = `vu-ai-assistant-${dateStr}.pdf`;
+    
+    // Save the PDF
+    doc.save(filename);
+    
+    // Show success feedback
+    const originalText = exportPdfBtn.textContent;
+    const originalWidth = exportPdfBtn.offsetWidth;
+    exportPdfBtn.style.minWidth = `${originalWidth}px`;
+    
+    exportPdfBtn.textContent = '✓ Downloaded!';
+    exportPdfBtn.classList.add('success-action');
+    
+    setTimeout(() => {
+      exportPdfBtn.textContent = originalText;
+      exportPdfBtn.classList.remove('success-action');
+      setTimeout(() => {
+        exportPdfBtn.style.minWidth = '';
+      }, 300);
+    }, 2000);
+    
+  } catch (error) {
+    console.error('Failed to export PDF:', error);
+    
+    exportPdfBtn.textContent = '❌ Failed';
+    exportPdfBtn.classList.add('error-action');
+    
+    setTimeout(() => {
+      exportPdfBtn.textContent = currentLanguage === 'english' ? 'Export PDF' : 'Exporteer PDF';
+      exportPdfBtn.classList.remove('error-action');
+    }, 2000);
+  }
+}
+
+// Helper function to process HTML elements for PDF
+function processElementForPDF(element, doc, margin, maxWidth, startY, lineHeight, paragraphSpacing, pageHeight) {
+  let yPosition = startY;
+  const children = element.childNodes;
+  
+  // Helper to check and add new page if needed
+  function checkPageBreak(requiredSpace) {
+    if (yPosition + requiredSpace > pageHeight - margin) {
+      doc.addPage();
+      yPosition = margin;
+    }
+    return yPosition;
+  }
+  
+  // Helper to add wrapped text
+  function addWrappedText(text, fontSize, fontStyle, indent = 0) {
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', fontStyle);
+    
+    const effectiveWidth = maxWidth - indent;
+    const lines = doc.splitTextToSize(text, effectiveWidth);
+    
+    lines.forEach((line, index) => {
+      yPosition = checkPageBreak(lineHeight);
+      doc.text(line, margin + indent, yPosition);
+      yPosition += lineHeight;
+    });
+    
+    return yPosition;
+  }
+  
+  for (let i = 0; i < children.length; i++) {
+    const node = children[i];
+    
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent.trim();
+      if (text) {
+        yPosition = addWrappedText(text, 11, 'normal');
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const tagName = node.tagName.toLowerCase();
+      const textContent = node.textContent.trim();
+      
+      if (!textContent) continue;
+      
+      if (tagName === 'h1') {
+        yPosition = checkPageBreak(lineHeight + 5);
+        doc.setTextColor(0, 119, 179);
+        yPosition = addWrappedText(textContent, 16, 'bold');
+        doc.setTextColor(51, 51, 51);
+        yPosition += paragraphSpacing;
+      } else if (tagName === 'h2') {
+        yPosition = checkPageBreak(lineHeight + 3);
+        doc.setTextColor(0, 90, 135);
+        yPosition = addWrappedText(textContent, 14, 'bold');
+        doc.setTextColor(51, 51, 51);
+        yPosition += paragraphSpacing / 2;
+      } else if (tagName === 'h3') {
+        yPosition = checkPageBreak(lineHeight + 2);
+        doc.setTextColor(0, 90, 135);
+        yPosition = addWrappedText(textContent, 12, 'bold');
+        doc.setTextColor(51, 51, 51);
+        yPosition += paragraphSpacing / 2;
+      } else if (tagName === 'h4') {
+        yPosition = checkPageBreak(lineHeight + 2);
+        yPosition = addWrappedText(textContent, 11, 'bold');
+        yPosition += paragraphSpacing / 2;
+      } else if (tagName === 'p') {
+        yPosition = checkPageBreak(lineHeight);
+        yPosition = addWrappedText(textContent, 11, 'normal');
+        yPosition += paragraphSpacing;
+      } else if (tagName === 'ul' || tagName === 'ol') {
+        const listItems = node.querySelectorAll(':scope > li');
+        listItems.forEach((li, index) => {
+          yPosition = checkPageBreak(lineHeight);
+          const bullet = tagName === 'ul' ? '•' : `${index + 1}.`;
+          const itemText = `${bullet} ${li.textContent.trim()}`;
+          yPosition = addWrappedText(itemText, 11, 'normal', 5);
+        });
+        yPosition += paragraphSpacing / 2;
+      } else if (tagName === 'strong' || tagName === 'b') {
+        yPosition = addWrappedText(textContent, 11, 'bold');
+      } else if (tagName === 'em' || tagName === 'i') {
+        yPosition = addWrappedText(textContent, 11, 'italic');
+      } else {
+        // For other elements, just add the text content
+        if (textContent) {
+          yPosition = addWrappedText(textContent, 11, 'normal');
+        }
+      }
+    }
+  }
+  
+  return yPosition;
+}
+
 
 
 // Switch between tabs and update UI
@@ -1102,6 +1224,7 @@ function updateTooltips() {
     'generate-explanation': currentLanguage === 'english' ? 'Get explanations of complex topics' : 'Krijg uitleg over complexe onderwerpen',
     'generate-suggestions': currentLanguage === 'english' ? 'Get teaching activity suggestions' : 'Krijg suggesties voor lesactiviteiten',
     'copy-result': currentLanguage === 'english' ? 'Copy content to clipboard' : 'Kopieer inhoud naar klembord',
+    'export-pdf': currentLanguage === 'english' ? 'Export content as PDF' : 'Exporteer inhoud als PDF',
     'generate-custom': currentLanguage === 'english' ? 'Generate response using your custom prompt' : 'Genereer een antwoord met je aangepaste prompt'
   };
   

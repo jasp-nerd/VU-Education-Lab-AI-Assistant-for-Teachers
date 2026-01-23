@@ -279,10 +279,5 @@ async function getBackendStatus() {
 window.GeminiAPI = {
   generateContent,
   validateConnection,
-  getBackendStatus,
-  // Legacy compatibility - remove API key functions since they're no longer needed
-  validateApiKey: async () => {
-    console.warn('validateApiKey is deprecated - API keys are now handled by the backend');
-    return await validateConnection();
-  }
+  getBackendStatus
 };
