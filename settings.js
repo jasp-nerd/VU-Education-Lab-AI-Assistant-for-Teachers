@@ -49,6 +49,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         educationLabLink.href = url;
       }
     }
+
+    // Update the Canvas course link URL based on language
+    const canvasCourseLink = document.getElementById('canvas-course-link');
+    if (canvasCourseLink) {
+      const url = getSettingsTranslation('canvasCourseUrl');
+      if (url) {
+        canvasCourseLink.href = url;
+      }
+    }
   }
   // --- END TRANSLATION SUPPORT ---
 

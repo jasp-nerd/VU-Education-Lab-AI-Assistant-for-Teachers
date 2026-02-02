@@ -175,10 +175,57 @@
       background: rgba(245, 124, 0, 0.15);
       transform: translateX(2px);
     }
-    .ai-literacy-icon { 
-      font-size: 20px; 
-      margin-right: 8px; 
-      vertical-align: middle; 
+    .ai-literacy-icon {
+      font-size: 20px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    /* Canvas Course Section - Similar to AI Literacy but with blue theme */
+    .canvas-course-section {
+      background: rgba(0, 119, 179, 0.05);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      border-left: 3px solid var(--vu-blue);
+      transition: all 0.2s ease;
+    }
+    .canvas-course-section:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+      transform: translateY(-1px);
+    }
+    .canvas-course-section h3 {
+      color: var(--vu-blue);
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    .canvas-course-section p {
+      margin-bottom: 15px;
+      color: var(--vu-dark-gray);
+      line-height: 1.5;
+    }
+    .canvas-course-section a {
+      color: var(--vu-blue);
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-radius: 4px;
+      background: rgba(0, 119, 179, 0.1);
+    }
+    .canvas-course-section a:hover {
+      text-decoration: none;
+      background: rgba(0, 119, 179, 0.15);
+      transform: translateX(2px);
+    }
+    .canvas-course-icon {
+      font-size: 20px;
+      margin-right: 8px;
+      vertical-align: middle;
     }
     
     /* Account Section Styling */
@@ -324,6 +371,11 @@
       <h3><span class="ai-literacy-icon">🧠</span><span data-i18n="aiLiteracyTitle">VU Education Lab</span></h3>
       <p data-i18n="aiLiteracyDesc">This AI Assistant is created by the VU Education Lab. If you have questions about AI in education or are interested in workshops and tools for teaching, visit us!</p>
       <p><a id="ai-literacy-link" href="https://vu.nl/en/education/vu-education-lab" target="_blank" data-i18n="aiLiteracyLink">Visit VU Education Lab →</a></p>
+    </div>
+    <div class="canvas-course-section">
+      <h3><span class="canvas-course-icon">📚</span><span data-i18n="canvasCourseTitle">Canvas Course Page</span></h3>
+      <p data-i18n="canvasCourseDesc">Visit the Canvas course page for guides, tutorials, and resources on how to use the VU Education Lab AI Assistant effectively.</p>
+      <p><a id="canvas-course-link" href="https://canvas.vu.nl/courses/47759/pages/vu-education-lab-ai-assistant" target="_blank" data-i18n="canvasCourseLink">Visit Canvas Course Page →</a></p>
     </div>
     <footer>
       <p>Developed by Vrije Universiteit Amsterdam</p>

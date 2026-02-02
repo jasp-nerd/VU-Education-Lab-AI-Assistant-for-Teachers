@@ -482,6 +482,98 @@ async function getCurrentTabContent() {
   });
 }
 
+// Helper function to check if page content extraction failed (PDF or minimal content)
+function checkContentExtractionIssues(pageContent) {
+  // Check for PDF extraction failure
+  if (pageContent.isPDF && pageContent.pdfExtractionFailed) {
+    return {
+      hasIssue: true,
+      isPDF: true,
+      message: 'pdf_extraction_failed'
+    };
+  }
+  
+  // Check for minimal content (likely a PDF or embedded content)
+  const paragraphCount = pageContent.paragraphs?.length || 0;
+  const headingCount = (pageContent.headings?.h1?.length || 0) + 
+                       (pageContent.headings?.h2?.length || 0) + 
+                       (pageContent.headings?.h3?.length || 0);
+  const textLength = pageContent.text?.length || 0;
+  const totalContent = paragraphCount + headingCount;
+  
+  // If very little content detected and URL suggests it might be a PDF
+  const urlLooksLikePDF = pageContent.url?.toLowerCase().includes('.pdf') || 
+                          pageContent.title?.toLowerCase().includes('.pdf');
+  
+  if (totalContent < 3 && textLength < 200) {
+    return {
+      hasIssue: true,
+      isPDF: urlLooksLikePDF,
+      message: urlLooksLikePDF ? 'pdf_extraction_failed' : 'minimal_content'
+    };
+  }
+  
+  return { hasIssue: false };
+}
+
+// Display PDF extraction error message
+function displayPDFExtractionError() {
+  hideLoading();
+  
+  const title = getTranslation('pdfExtractionFailedTitle');
+  const message = getTranslation('pdfExtractionFailedMessage');
+  const solutions = getTranslation('pdfExtractionFailedSolutions');
+  const option1 = getTranslation('pdfExtractionFailedOption1');
+  const option2 = getTranslation('pdfExtractionFailedOption2');
+  const option3 = getTranslation('pdfExtractionFailedOption3');
+  const option4 = getTranslation('pdfExtractionFailedOption4');
+  
+  resultContent.innerHTML = `
+    <div class="pdf-error-message" style="padding: 15px;">
+      <h3 style="color: #d32f2f; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 24px;">📄</span> ${title}
+      </h3>
+      <p style="margin-bottom: 15px; line-height: 1.6;">${message}</p>
+      <p style="margin-bottom: 10px; font-weight: 600;">${solutions}</p>
+      <ul style="margin-left: 20px; line-height: 1.8;">
+        <li>🌐 ${option1}</li>
+        <li>📖 ${option2}</li>
+        <li>📋 ${option3}</li>
+        <li>🎓 ${option4}</li>
+      </ul>
+    </div>
+  `;
+  
+  resultContent.style.opacity = '1';
+  resultActions.classList.add('hidden');
+  resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Display minimal content warning message
+function displayMinimalContentWarning() {
+  hideLoading();
+  
+  const message = getTranslation('minimalContentWarning');
+  
+  resultContent.innerHTML = `
+    <div class="minimal-content-warning" style="padding: 15px;">
+      <h3 style="color: #f57c00; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 24px;">⚠️</span> ${currentLanguage === 'english' ? 'Limited Content Detected' : 'Beperkte Inhoud Gedetecteerd'}
+      </h3>
+      <p style="margin-bottom: 15px; line-height: 1.6;">${message}</p>
+      <p style="line-height: 1.6;">
+        ${currentLanguage === 'english' 
+          ? 'Try refreshing the page or wait for it to fully load before trying again.' 
+          : 'Probeer de pagina te vernieuwen of wacht tot deze volledig is geladen voordat u het opnieuw probeert.'}
+      </p>
+    </div>
+  `;
+  
+  resultContent.style.opacity = '1';
+  resultActions.classList.add('hidden');
+  resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
 // Helper function to create structured content from page content
 function createStructuredContent(pageContent) {
   let structuredContent = `Title: ${pageContent.title}\n`;
@@ -522,6 +614,17 @@ async function generateSummary() {
   const summaryLengthOption = document.getElementById('summary-length').value;
   const pageContent = await getCurrentTabContent();
   
+  // Check for PDF extraction failure or minimal content
+  const contentIssue = checkContentExtractionIssues(pageContent);
+  if (contentIssue.hasIssue) {
+    if (contentIssue.isPDF) {
+      displayPDFExtractionError();
+    } else {
+      displayMinimalContentWarning();
+    }
+    return;
+  }
+  
   // Create a more structured prompt using the enhanced content extraction
   const structuredContent = createStructuredContent(pageContent);
   
@@ -543,6 +646,17 @@ async function generateQuiz() {
   const questionCount = document.getElementById('question-count').value;
   const quizDifficulty = document.getElementById('quiz-difficulty').value;
   const pageContent = await getCurrentTabContent();
+  
+  // Check for PDF extraction failure or minimal content
+  const contentIssue = checkContentExtractionIssues(pageContent);
+  if (contentIssue.hasIssue) {
+    if (contentIssue.isPDF) {
+      displayPDFExtractionError();
+    } else {
+      displayMinimalContentWarning();
+    }
+    return;
+  }
   
   // Create a more structured prompt using the enhanced content extraction
   const structuredContent = createStructuredContent(pageContent);
@@ -574,6 +688,17 @@ async function generateExplanation() {
   const level = document.getElementById('explanation-level').value;
   const pageContent = await getCurrentTabContent();
   
+  // Check for PDF extraction failure or minimal content
+  const contentIssue = checkContentExtractionIssues(pageContent);
+  if (contentIssue.hasIssue) {
+    if (contentIssue.isPDF) {
+      displayPDFExtractionError();
+    } else {
+      displayMinimalContentWarning();
+    }
+    return;
+  }
+  
   // Create a more structured prompt using the enhanced content extraction
   const structuredContent = createStructuredContent(pageContent);
   
@@ -604,6 +729,17 @@ async function generateSuggestions() {
   
   const format = document.getElementById('teaching-format').value;
   const pageContent = await getCurrentTabContent();
+  
+  // Check for PDF extraction failure or minimal content
+  const contentIssue = checkContentExtractionIssues(pageContent);
+  if (contentIssue.hasIssue) {
+    if (contentIssue.isPDF) {
+      displayPDFExtractionError();
+    } else {
+      displayMinimalContentWarning();
+    }
+    return;
+  }
   
   // Create a more structured prompt using the enhanced content extraction
   const structuredContent = createStructuredContent(pageContent);
@@ -1257,6 +1393,18 @@ async function generateCustomResponse() {
 
   // Get current page content
   const pageContent = await getCurrentTabContent();
+  
+  // Check for PDF extraction failure or minimal content
+  const contentIssue = checkContentExtractionIssues(pageContent);
+  if (contentIssue.hasIssue) {
+    if (contentIssue.isPDF) {
+      displayPDFExtractionError();
+    } else {
+      displayMinimalContentWarning();
+    }
+    return;
+  }
+  
   let structuredContent = `Title: ${pageContent.title}\n`;
   if (pageContent.headings && pageContent.headings.h1 && pageContent.headings.h1.length > 0) {
     structuredContent += `Main Headings: ${pageContent.headings.h1.join(', ')}\n`;

@@ -82,10 +82,22 @@
   "aiLiteracyDesc": "This AI Assistant is created by the VU Education Lab. If you have questions about AI in education or are interested in workshops and tools for teaching, visit us!",
   "aiLiteracyLink": "Visit VU Education Lab →",
   "aiLiteracyUrl": "https://vu.nl/en/education/vu-education-lab",
+  "canvasCourseTitle": "Canvas Course Page",
+  "canvasCourseDesc": "Visit the Canvas course page for guides, tutorials, and resources on how to use the VU Education Lab AI Assistant effectively.",
+  "canvasCourseLink": "Visit Canvas Course Page →",
+  "canvasCourseUrl": "https://canvas.vu.nl/courses/47759/pages/vu-education-lab-ai-assistant",
   "settingsFloatingPopupSection": "Show floating popup on web pages",
   "settingsFloatingPopupLabel": "Show floating popup on web pages",
   "settingsFloatingPopupEnabled": "Floating popup enabled",
   "settingsFloatingPopupDisabled": "Floating popup disabled",
   "settingsAIProviderSection": "AI Provider Selection",
-  "settingsAIProviderDesc": "Choose which AI provider to use for content generation."
+  "settingsAIProviderDesc": "Choose which AI provider to use for content generation.",
+  "pdfExtractionFailedTitle": "Unable to Read PDF Content",
+  "pdfExtractionFailedMessage": "This appears to be a PDF document, but Chrome's built-in PDF viewer prevents extensions from reading PDF content directly. This is a security limitation in Chrome, not a bug in the extension.",
+  "pdfExtractionFailedSolutions": "To analyze this PDF, please try one of these alternatives:",
+  "pdfExtractionFailedOption1": "Open the PDF in Google Drive (drive.google.com) and view it there",
+  "pdfExtractionFailedOption2": "Use a web-based PDF viewer like Adobe Acrobat online",
+  "pdfExtractionFailedOption3": "Copy the PDF text manually and paste it into the Custom Prompt tab",
+  "pdfExtractionFailedOption4": "If this is a Canvas or LMS page, try viewing the content in the native LMS viewer",
+  "minimalContentWarning": "Very little content was detected on this page. The page may still be loading, or the content may be in a format that cannot be read (such as a PDF or embedded content)."
 }

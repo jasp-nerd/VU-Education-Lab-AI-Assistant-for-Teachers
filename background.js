@@ -221,7 +221,14 @@ function startTokenRefreshTimer() {
 // Check authentication status on extension install or update
 chrome.runtime.onInstalled.addListener(async (details) => {
   console.log('Extension installed/updated:', details.reason);
-  
+
+  // Open Canvas course page on first install
+  if (details.reason === 'install') {
+    chrome.tabs.create({
+      url: 'https://canvas.vu.nl/courses/47759/pages/vu-education-lab-ai-assistant'
+    });
+  }
+
   // Check if user is authenticated
   const result = await chrome.storage.local.get(['vuAuthUser']);
   if (!result.vuAuthUser) {
