@@ -5,7 +5,7 @@
 const OAUTH_CLIENT_ID = '696134929035-krfrjhqglcs08tve92p2jmvqcg4omjq3.apps.googleusercontent.com';
 
 // Allowed email domains for VU users
-const ALLOWED_DOMAINS = ['vu.nl', 'student.vu.nl'];
+const ALLOWED_DOMAINS = ['vu.nl', 'student.vu.nl', 'amsterdamumc.nl'];
 
 // Token refresh interval (every 30 minutes)
 const TOKEN_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in milliseconds
@@ -94,7 +94,7 @@ async function handleSignIn() {
     
     // Validate email domain
     if (!isValidVUEmail(userInfo.email)) {
-      throw new Error(`Access denied. Only VU email addresses (@vu.nl or @student.vu.nl) are allowed. Your email: ${userInfo.email}`);
+      throw new Error(`Access denied. Only VU Amsterdam and AmsterdamUMC email addresses (@vu.nl or @amsterdamumc.nl) are allowed. Your email: ${userInfo.email}`);
     }
     
     // Create and save user object

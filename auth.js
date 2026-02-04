@@ -3,7 +3,7 @@
 // Note: OAuth flow is initiated by this module but executed by background script (background.js)
 
 // Allowed email domains for VU users
-const ALLOWED_DOMAINS = ['vu.nl', 'student.vu.nl'];
+const ALLOWED_DOMAINS = ['vu.nl', 'student.vu.nl', 'amsterdamumc.nl'];
 
 /**
  * Check if an email address is from an allowed VU domain
