@@ -52,9 +52,9 @@
           <p>Generate a concise summary of the current page for lesson planning.</p>
           <div class="input-group">
             <select id="summary-length" aria-label="Summary length">
-              <option value="short">Short (1-2 paragraphs)</option>
-              <option value="medium" selected>Medium (3-4 paragraphs)</option>
-              <option value="long">Long (5+ paragraphs)</option>
+              <option value="short">Short (~100 words)</option>
+              <option value="medium" selected>Medium (~250 words)</option>
+              <option value="long">Long (~500 words)</option>
             </select>
             <button id="generate-summary" data-tooltip="Generate a summary of the current page">Generate</button>
           </div>
@@ -142,16 +142,20 @@
         </div>
       </div>
 
-      <div id="result-container">
-        <div id="loading" class="hidden" aria-live="polite">
-          <div class="spinner" role="status" aria-label="Loading"></div>
-          <p>Processing your request...</p>
+      <div id="result-wrapper">
+        <div id="result-container">
+          <div id="loading" class="hidden" aria-live="polite">
+            <div class="spinner" role="status" aria-label="Loading"></div>
+            <p>Processing your request...</p>
+          </div>
+          <div id="result-content" aria-live="polite"></div>
+          <div class="result-actions hidden">
+            <button id="copy-result" data-tooltip="Copy content to clipboard">Copy to Clipboard</button>
+            <button id="export-pdf" data-tooltip="Export content as PDF">Export PDF</button>
+          </div>
         </div>
-        <div id="result-content" aria-live="polite"></div>
-        <div class="result-actions hidden">
-          <button id="copy-result" data-tooltip="Copy content to clipboard">Copy to Clipboard</button>
-          <button id="export-pdf" data-tooltip="Export content as PDF">Export PDF</button>
-        </div>
+        <div id="result-fade" class="hidden"></div>
+        <button id="expand-toggle" class="hidden" aria-label="Show more content">Show more ▼</button>
       </div>
     </div>
 

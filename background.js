@@ -5,7 +5,7 @@
 const OAUTH_CLIENT_ID = '696134929035-krfrjhqglcs08tve92p2jmvqcg4omjq3.apps.googleusercontent.com';
 
 // Allowed email domains for VU users
-const ALLOWED_DOMAINS = ['vu.nl', 'student.vu.nl', 'amsterdamumc.nl'];
+const ALLOWED_DOMAINS = ['vu.nl', 'student.vu.nl', 'amsterdamumc.nl', 'acta.nl'];
 
 // Token refresh interval (every 30 minutes)
 const TOKEN_REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes in milliseconds
@@ -40,7 +40,8 @@ async function handleSignIn() {
     authUrl.searchParams.set('redirect_uri', redirectUrl);
     authUrl.searchParams.set('scope', scopes);
     authUrl.searchParams.set('prompt', 'select_account');
-    authUrl.searchParams.set('hd', 'vu.nl');
+    // Note: hd parameter removed to support multiple domains (vu.nl, amsterdamumc.nl, acta.nl)
+    // Domain validation happens after authentication in isValidVUEmail()
     
     // Launch OAuth flow
     const responseUrl = await new Promise((resolve, reject) => {

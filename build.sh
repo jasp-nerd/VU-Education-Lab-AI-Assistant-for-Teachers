@@ -41,6 +41,7 @@ zip -r "$OUTPUT_DIR/$ZIP_NAME" . \
     -x ".claude/*" \
     -x "*.swp" \
     -x "*.swo" \
+    -x "docs/*" \
     -x "images/icons/*" \
     -x "README.md" \
     -x "PRIVACY_POLICY.md"

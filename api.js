@@ -38,7 +38,8 @@ async function generateContent(prompt, options = {}) {
     const requestBody = {
       prompt: prompt,
       systemPrompt: options.systemPrompt || null,
-      feature: options.feature || 'general'
+      feature: options.feature || 'general',
+      maxTokens: options.maxTokens || null
     };
 
     console.log("Making streaming request to backend:", `${BACKEND_URL}/api/generate`);

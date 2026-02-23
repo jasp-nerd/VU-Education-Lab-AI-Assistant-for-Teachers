@@ -245,9 +245,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   resultContent = document.getElementById('result-content');
   loadingIndicator = document.getElementById('loading');
   resultActions = document.querySelector('.result-actions');
+  expandToggle = document.getElementById('expand-toggle');
+  resultFade = document.getElementById('result-fade');
   
   copyResultBtn = document.getElementById('copy-result');
   exportPdfBtn = document.getElementById('export-pdf');
+  
+  if (expandToggle) {
+    expandToggle.addEventListener('click', toggleResultExpand);
+  }
   
   generateSummaryBtn = document.getElementById('generate-summary');
   generateQuizBtn = document.getElementById('generate-quiz');
@@ -632,7 +638,8 @@ async function generateSummary() {
     .replace('{length}', summaryLengthOption)
     .replace('{content}', structuredContent);
   
-  callGemini(prompt, 'summarize');
+  const maxTokensByLength = { short: 500, medium: 1500, long: 4000 };
+  callGemini(prompt, 'summarize', { maxTokens: maxTokensByLength[summaryLengthOption] || 1500 });
   
   // Highlight key terms on the page
   highlightKeyTerms();
@@ -788,7 +795,9 @@ async function highlightSpecificTerm(term) {
 }
 
 // Call Backend API with streaming support
-async function callGemini(prompt, feature) {
+async function callGemini(prompt, feature, extraOptions = {}) {
+    let streamCleanup = null;
+
     try {
       // Prepare system prompt based on feature
       let systemPrompt;
@@ -813,37 +822,60 @@ async function callGemini(prompt, feature) {
       
       // Set up for streaming display
       hideLoading();
+      resetExpandState();
       resultContent.innerHTML = '';
       resultContent.style.opacity = '1';
       resultActions.classList.add('hidden');
       
       let accumulatedText = '';
+      let userHasScrolled = false;
+      let overflowCheckTimer = null;
+
+      const onUserScroll = () => { userHasScrolled = true; };
+      resultContainer.addEventListener('wheel', onUserScroll, { passive: true });
+      resultContainer.addEventListener('touchmove', onUserScroll, { passive: true });
+
+      streamCleanup = () => {
+        resultContainer.removeEventListener('wheel', onUserScroll);
+        resultContainer.removeEventListener('touchmove', onUserScroll);
+        if (overflowCheckTimer) clearTimeout(overflowCheckTimer);
+        checkResultOverflow();
+      };
       
-      // Set options for API call with streaming callback
+      // Scroll the container into view once at the start
+      resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
       const options = {
         systemPrompt: systemPrompt,
         feature: feature,
+        maxTokens: extraOptions.maxTokens || null,
         onChunk: (chunk) => {
-          // Accumulate the text
           accumulatedText += chunk;
           
-          // Convert markdown to HTML and display
           const formattedText = convertMarkdownToHTML(accumulatedText);
           resultContent.innerHTML = formattedText;
           
-          // Scroll to bottom of result container to show new content
-          resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          if (!userHasScrolled) {
+            resultContainer.scrollTop = resultContainer.scrollHeight;
+          }
+
+          if (!overflowCheckTimer) {
+            overflowCheckTimer = setTimeout(() => {
+              checkResultOverflow();
+              overflowCheckTimer = null;
+            }, 500);
+          }
         }
       };
       
-      // Call the backend API using the window.GeminiAPI exported from api.js
       const response = await window.GeminiAPI.generateContent(prompt, options);
       
-      // Display final result (in case there were any issues with streaming)
+      streamCleanup();
       displayResult(response);
       
     } catch (error) {
       hideLoading();
+      if (streamCleanup) streamCleanup();
       
       // Check if it's an authentication error
       if (error.message.includes('Authentication') || error.message.includes('sign in')) {
@@ -895,9 +927,49 @@ async function callGemini(prompt, feature) {
     }
 }
 
+// Check if the result container content overflows and show/hide the expand toggle
+function checkResultOverflow() {
+  if (!resultContainer || !expandToggle || !resultFade) return;
+  const isOverflowing = resultContainer.scrollHeight > resultContainer.clientHeight + 10;
+  const isExpanded = resultContainer.classList.contains('expanded');
+  
+  if (isOverflowing && !isExpanded) {
+    expandToggle.classList.remove('hidden');
+    resultFade.classList.remove('hidden');
+  } else {
+    if (!isExpanded) {
+      expandToggle.classList.add('hidden');
+    }
+    resultFade.classList.add('hidden');
+  }
+}
+
+function toggleResultExpand() {
+  if (!resultContainer || !expandToggle || !resultFade) return;
+  const isExpanded = resultContainer.classList.toggle('expanded');
+  
+  if (isExpanded) {
+    expandToggle.textContent = getTranslation('showLess');
+    resultFade.classList.add('hidden');
+  } else {
+    expandToggle.textContent = getTranslation('showMore');
+    resultContainer.scrollTop = 0;
+    checkResultOverflow();
+  }
+}
+
+function resetExpandState() {
+  if (!resultContainer || !expandToggle || !resultFade) return;
+  resultContainer.classList.remove('expanded');
+  expandToggle.classList.add('hidden');
+  expandToggle.textContent = getTranslation('showMore');
+  resultFade.classList.add('hidden');
+}
+
 // Display API response with markdown formatting
 function displayResult(text) {
   hideLoading();
+  resetExpandState();
   
   // Add animation for result appearance
   resultContent.style.opacity = '0';
@@ -913,6 +985,9 @@ function displayResult(text) {
     
     // Smooth scroll to results
     resultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    
+    // Check if content overflows and show expand toggle
+    checkResultOverflow();
     
     // Show action buttons with animation
     setTimeout(() => {

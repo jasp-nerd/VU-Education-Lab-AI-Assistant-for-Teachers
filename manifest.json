@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VU Education Lab AI Assistant for Teachers",
-  "version": "3.2.2",
+  "version": "3.2.4",
   "description": "Transform any webpage into ready-to-use educational content. AI-powered summaries, quizzes, and teaching tools for VU educators.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA1+xZKyPnPIDqxNCAjnQo0de4/+kYQo5YACQYoVwoenCoJ/H5o0vkzQcSgNUUyYGpQpmSv/V4mzQhWpbpK/uJ+mI7OkjDH4QFk3yxdxMu/K0K6QylcVZkMViKcJqxehtjztKbvDGmjKjrvukqIJFUB8/e0ZWlJBIWIf7w9hFye4SoTprRKAr9EKGiD/3GAavoIA15WD6DEYB601c+CFXHamVGDsL3pRWHPGRjjsoERdtlsjxc7XvlYdPXn0+LF+fQTHSkoGGq2yJdGAGSjc4kDCSV7ssvxdFEIGoeqz+y+wsbROlxuBNpo07Oa4jSYvt/8K0+Nop2gUw3FFYXxTTpewIDAQAB",
   "permissions": ["activeTab", "storage", "scripting", "identity"],
