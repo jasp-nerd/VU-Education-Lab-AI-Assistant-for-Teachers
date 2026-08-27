@@ -4,7 +4,7 @@
 // Configuration - Backend URL
 // For local development: http://localhost:3000
 // For production: Azure App Service URL
-const BACKEND_URL = 'https://vu-education-lab-backend.azurewebsites.net';
+const BACKEND_URL = 'https://teacher-assistant-api.vu-edulab.nl';
 
 /**
  * Generate content using the backend server with streaming support
@@ -61,12 +61,16 @@ async function generateContent(prompt, options = {}) {
       // Try to get error message
       const responseText = await response.text();
       let errorMessage = response.statusText;
+      // Azure returns a plain-text 403 when the app is stopped. Only a JSON
+      // body means the rejection actually came from our auth middleware.
+      let bodyWasJson = true;
       
       try {
         const data = JSON.parse(responseText);
         errorMessage = data.error || errorMessage;
       } catch (e) {
         errorMessage = responseText.substring(0, 100);
+        bodyWasJson = false;
       }
 
       console.error("Backend Error:", {
@@ -96,7 +100,9 @@ async function generateContent(prompt, options = {}) {
           userMessage = "Authentication failed. Please sign in again.";
           break;
         case 403:
-          userMessage = "Access denied. Only VU emails are allowed.";
+          userMessage = bodyWasJson
+            ? "Access denied. Only VU emails are allowed."
+            : "The AI service is currently unavailable. Please try again later.";
           break;
         case 400:
           userMessage = `Invalid request: ${errorMessage}`;
@@ -123,6 +129,7 @@ async function generateContent(prompt, options = {}) {
     let fullContent = '';
     let buffer = '';
     let streamDone = false;
+    let streamError = null;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -152,7 +159,9 @@ async function generateContent(prompt, options = {}) {
           const data = JSON.parse(jsonStr);
           
           if (data.error) {
-            throw new Error(data.error);
+            streamError = data.error;
+            streamDone = true;
+            break;
           }
           
           if (data.content) {
@@ -182,6 +191,11 @@ async function generateContent(prompt, options = {}) {
         break;
       }
     }
+
+    if (streamError) {
+      throw new Error(streamError);
+    }
+
 
     console.log("Content generation successful, total length:", fullContent.length);
     return fullContent;
